@@ -1,6 +1,6 @@
 # Causal Inference in Credit Risk: Heterogeneous Treatment Effects of Interest Rates on Loan Default
 
-**Dataset:** LendingClub (2007–2018) — 82,228 loans after preprocessing  
+**Dataset:** LendingClub (2007-2018), 82,228 loans after preprocessing  
 **Method:** PC/GES Causal Discovery + Double Machine Learning (DML) + CausalForestDML  
 **Treatment:** Interest rate (`int_rate`) · **Outcome:** Loan default (`default`)
 
@@ -11,25 +11,25 @@
 1. [Motivation](#1-motivation)
 2. [Data](#2-data)
 3. [Pipeline Overview](#3-pipeline-overview)
-4. [Step 1 — Data Preprocessing](#4-step-1--data-preprocessing)
-5. [Step 2 — Causal Discovery (GES)](#5-step-2--causal-discovery-ges)
-6. [Step 3 — Causal Effect Estimation (DML)](#6-step-3--causal-effect-estimation-dml)
-7. [Step 4A — Validation: DoWhy Refutation Tests](#7-step-4a--validation-dowhy-refutation-tests)
-8. [Step 4B — SHAP vs DML: Four Demonstrations](#8-step-4b--shap-vs-dml-four-demonstrations)
+4. [Step 1: Data Preprocessing](#4-step-1-data-preprocessing)
+5. [Step 2: Causal Discovery (GES)](#5-step-2-causal-discovery-ges)
+6. [Step 3: Causal Effect Estimation (DML)](#6-step-3-causal-effect-estimation-dml)
+7. [Step 4A: Validation - DoWhy Refutation Tests](#7-step-4a-validation-dowhy-refutation-tests)
+8. [Step 4B: SHAP vs DML - Four Demonstrations](#8-step-4b-shap-vs-dml-four-demonstrations)
 9. [Final Verdict](#9-final-verdict)
-10. [Paper-Ready Numbers](#10-paper-ready-numbers)
+10. [Key Results](#10-key-results-at-a-glance)
 
 ---
 
 ## 1. Motivation
 
-Standard credit risk models — logistic regression scorecards, XGBoost + SHAP — answer the question: *"Which borrowers are most likely to default?"* This is a prediction question. It does not answer the policy question: *"If we increase this borrower's interest rate by 1 percentage point, how much does their default probability change?"*
+Standard credit risk models (logistic regression scorecards, XGBoost + SHAP) answer the question: *"Which borrowers are most likely to default?"* This is a prediction question. It does not answer the policy question: *"If we increase this borrower's interest rate by 1 percentage point, how much does their default probability change?"*
 
-These are fundamentally different questions. A high-risk borrower (high predicted default) and a rate-sensitive borrower (high causal response to rate) are not the same person. Conflating them leads to mispriced loans — you charge the wrong borrowers more.
+These are fundamentally different questions. A high-risk borrower (high predicted default) and a rate-sensitive borrower (high causal response to rate) are not the same person. Conflating them leads to mispriced loans; you charge the wrong borrowers more.
 
 **SHAP attribution** (the industry standard for "driver analysis") answers the prediction question. It decomposes a model's output into feature contributions: *"In the model's prediction, how much did int_rate matter?"* This is not the same as the causal effect of rate on default, for a simple reason: SHAP cannot separate *"high rate caused default"* from *"bad borrower got a high rate AND defaulted"*.
 
-This paper demonstrates:
+This project demonstrates:
 1. A four-step pipeline that estimates the true causal effect (ATE) and its heterogeneity across borrowers (CATE/HTE)
 2. Formal validation that the estimate is causally identified, not spurious
 3. Four empirical demonstrations that SHAP produces systematically biased estimates under confounding, while DML does not
@@ -73,13 +73,9 @@ Step 4: Validation
         Part B: SHAP comparison (why is the industry alternative wrong?)
 ```
 
-![Causal DAG produced by GES algorithm with domain knowledge constraints. Red = treatment (int_rate), green = outcome (default), blue = confounders (W), purple = effect modifiers (X). All 38 edges are directed with no ambiguous undirected edges.](outputs/causal_dag.png)
 
-*Figure 1: Causal DAG produced by GES algorithm with domain knowledge constraints. Red = treatment (int_rate), green = outcome (default), blue = confounders (W), purple = effect modifiers (X). All 38 edges are directed with no ambiguous undirected edges.*
 
----
-
-## 4. Step 1 — Data Preprocessing
+## 4. Step 1: Data Preprocessing
 
 **Key decisions:**
 
@@ -87,7 +83,7 @@ Step 4: Validation
 
 **Winsorisation:** Seven skewed features were winsorised at the 1st and 99th percentile to prevent extreme outliers from dominating the nuisance models in DML Stage 1.
 
-**Standardisation:** All 11 continuous variables were standardised (mean=0, std=1) using `StandardScaler`. This is required for DML — if features are on different scales, the nuisance models fit them with unequal regularisation, biasing the residuals.
+**Standardisation:** All 11 continuous variables were standardised (mean=0, std=1) using `StandardScaler`. This is required for DML; if features are on different scales, the nuisance models fit them with unequal regularisation, biasing the residuals.
 
 **Variable roles assigned:**
 
@@ -98,11 +94,11 @@ Step 4: Validation
 | Confounders W | `annual_inc`, `dti`, `fico_range_low`, `grade_num`, `purpose_num` | Residualised out in Stage 1 |
 | Effect Modifiers X | `annual_inc`, `loan_amnt`, `home_ownership_num`, `purpose_num`, `grade_num` | CATE conditions on these |
 
-The W/X split is the core modelling decision. W must satisfy the backdoor criterion — conditioning on W must block all non-causal paths between `int_rate` and `default`. This set was discovered by GES (Step 2) and validated empirically (Section 5).
+The W/X split is the core modelling decision. W must satisfy the backdoor criterion; conditioning on W must block all non-causal paths between `int_rate` and `default`. This set was discovered by GES (Step 2) and validated empirically (Section 5).
 
 ---
 
-## 5. Step 2 — Causal Discovery (GES)
+## 5. Step 2: Causal Discovery (GES)
 
 ### Why Automated Discovery
 
@@ -112,8 +108,8 @@ Manually specifying a causal graph requires strong assumptions about every varia
 
 The standard PC Algorithm uses Fisher's Z conditional independence test, which assumes variables are jointly Gaussian. Two violations make it unsuitable here:
 
-- `default` is binary (Bernoulli 0.2) — Fisher's Z has low power on binary outcomes and drops real edges into `default`
-- `grade_num` ↔ `fico_range_low` ↔ `int_rate` are highly collinear — partial correlations near zero after conditioning, causing PC to drop treatment-side edges
+- `default` is binary (Bernoulli 0.2). Fisher's Z has low power on binary outcomes and drops real edges into `default`
+- `grade_num` and `fico_range_low` and `int_rate` are highly collinear. Partial correlations near zero after conditioning, causing PC to drop treatment-side edges
 
 GES (Greedy Equivalence Search) is score-based — it maximises a BIC score rather than running p-value tests. This avoids both problems: BIC has no Gaussianity assumption, and score improvement is not confused by near-collinear variables the way p-values are.
 
@@ -143,7 +139,7 @@ Before running the full pipeline, confounders were validated empirically against
 | `open_acc` | −0.020 | +0.048 | ✗ Weak |
 | `revol_util` | +0.183 | +0.048 | → T only |
 
-**GES discovered exactly the four confirmed confounders** (`annual_inc`, `dti`, `fico_range_low`, `grade_num`) plus `purpose_num`. `revol_util` correctly excluded — it predicts rate but not default independently, so including it would over-control.
+**GES discovered exactly the four confirmed confounders** (`annual_inc`, `dti`, `fico_range_low`, `grade_num`) plus `purpose_num`. `revol_util` correctly excluded: it predicts rate but not default independently, so including it would over-control.
 
 ### Cross-Method Validation
 
@@ -155,7 +151,7 @@ Three discovery methods were compared to validate the confounder set:
 | PC + ChiSq | Constraint-based | annual_inc, dti, grade_num |
 | Empirical correlation | Direct data check | annual_inc, dti, fico_range_low, grade_num |
 
-GES and empirical correlation agree on the same four variables. This cross-method agreement — a score-based algorithm and direct statistical measurement converging on the same set — provides strong evidence that W is correctly specified.
+GES and empirical correlation agree on the same four variables. This cross-method agreement (a score-based algorithm and direct statistical measurement converging on the same set) provides strong evidence that W is correctly specified.
 
 ![GES-discovered DAG with domain constraints applied. 38 directed edges, 0 undirected edges. Confounders (blue) have arrows into both int_rate and default, satisfying the backdoor criterion.](outputs/dag_ges.png)
 
@@ -163,7 +159,7 @@ GES and empirical correlation agree on the same four variables. This cross-metho
 
 ---
 
-## 6. Step 3 — Causal Effect Estimation (DML)
+## 6. Step 3: Causal Effect Estimation (DML)
 
 ### Method
 
@@ -185,16 +181,16 @@ CausalForestDML regresses Ỹ on T̃ × X, learning how the treatment effect τ 
 | Metric | Value | Interpretation |
 |---|---|---|
 | ATE | **0.0239** | A 1 SD increase in int_rate raises default probability by 2.39 percentage points on average |
-| CATE std | 0.0104 | Substantial heterogeneity — the effect is not uniform |
+| CATE std | 0.0104 | Substantial heterogeneity, the effect is not uniform |
 | CATE max | 0.0927 | Most sensitive borrowers: +9.27pp per 1 SD rate increase |
-| CATE min | −0.0175 | Some borrowers: rate increase slightly lowers default probability |
+| CATE min | -0.0175 | Some borrowers: rate increase slightly lowers default probability |
 | DoWhy re-estimate | 0.0238 | Independent refit agrees to 4 decimal places (0.4% difference) |
 
 **Interpretation of ATE = 0.0239:**  
 `int_rate` is standardised, so 1 unit = 1 standard deviation ≈ 3–4 percentage points in actual rate terms. A 3–4pp rate increase causes a 2.39pp increase in default probability, on average. At a 20% baseline default rate, this represents a ~12% relative increase in defaults.
 
 **Interpretation of the CATE range:**  
-The 4x range between max (0.0927) and average (0.0239) CATE indicates strong effect heterogeneity. This is the core HTE finding — pricing decisions should not be based on the average effect. Low-income, high-risk borrowers are substantially more rate-sensitive than high-income, low-risk borrowers.
+The 4x range between max (0.0927) and average (0.0239) CATE indicates strong effect heterogeneity. This is the core HTE finding: pricing decisions should not be based on the average effect. Low-income, high-risk borrowers are substantially more rate-sensitive than high-income, low-risk borrowers.
 
 **On ATE stability across W specifications:**  
 The ATE of 0.0239 was stable across W=0 and W=5 specifications. This indicates limited omitted variable bias from observable confounders, consistent with `grade_num` (r=0.969 with int_rate) absorbing most of the confounding through the DML residualisation. The stability is a robustness finding, not a failure of the adjustment.
@@ -213,7 +209,7 @@ The ATE of 0.0239 was stable across W=0 and W=5 specifications. This indicates l
 
 ---
 
-## 7. Step 4A — Validation: DoWhy Refutation Tests
+## 7. Step 4A: Validation - DoWhy Refutation Tests
 
 **Overall: 4/4 tests passed**
 
@@ -221,7 +217,7 @@ The four refutation tests follow the falsificationist principle: a real causal e
 
 ---
 
-### Test 1 — Placebo Treatment ✓
+### Test 1: Placebo Treatment ✓
 
 **What it tests:** Replace `int_rate` with random noise. If the estimate is causal, the effect should collapse to ~0.
 
@@ -231,11 +227,11 @@ Original ATE:    0.0239
 Placebo ATE:    −0.0002   (p = 0.30)
 ```
 
-With random treatment, the estimated effect is −0.0002 — indistinguishable from zero (p=0.30 >> 0.05). The causal estimate depends on actual variation in interest rates, not on spurious data patterns. This is the most direct evidence that the pipeline is doing causal inference, not curve fitting.
+With random treatment, the estimated effect is -0.0002, indistinguishable from zero (p=0.30 >> 0.05). The causal estimate depends on actual variation in interest rates, not on spurious data patterns. This is the most direct evidence that the pipeline is doing causal inference, not curve fitting.
 
 ---
 
-### Test 2 — Random Common Cause ✓
+### Test 2: Random Common Cause ✓
 
 **What it tests:** Add a random variable to W. A well-specified W should be insensitive to irrelevant additions.
 
@@ -245,11 +241,11 @@ Original ATE:    0.0239
 After adding random confounder:    0.0238   (0.1% change)
 ```
 
-A 0.1% change is exceptional. This demonstrates two things: (1) the backdoor adjustment set W is complete — there is no residual confounding for a random variable to interact with, and (2) the DML residualisation is stable. Compare this to the 24% change observed with W=0 — the correct specification of W makes the estimate nearly immune to irrelevant additions.
+A 0.1% change is exceptional. This demonstrates two things: (1) the backdoor adjustment set W is complete, there is no residual confounding for a random variable to interact with, and (2) the DML residualisation is stable. Compare this to the 24% change observed with W=0: the correct specification of W makes the estimate nearly immune to irrelevant additions.
 
 ---
 
-### Test 3 — Data Subset Bootstrap ✓
+### Test 3: Data Subset Bootstrap ✓
 
 **What it tests:** Re-estimate on random 80% subsets. A real effect should be consistent across any large sample of the data.
 
@@ -263,7 +259,7 @@ The ATE across 8 random 80% subsamples is 0.0240 — identical to the full-datas
 
 ---
 
-### Test 4 — Unobserved Confounder (Tiered) ✓
+### Test 4: Unobserved Confounder (Tiered) ✓
 
 **What it tests:** Add a synthetic unmeasured confounder of increasing strength. At what point does the effect break?
 
@@ -288,7 +284,7 @@ The estimate is robust to mild and moderate unmeasured confounding. A confounder
 
 | Test | Result | Key Number |
 |---|---|---|
-| Placebo Treatment | ✓ PASSED | Effect = −0.0002 with fake T (p = 0.30) |
+| Placebo Treatment | ✓ PASSED | Effect = -0.0002 with fake T (p = 0.30) |
 | Random Common Cause | ✓ PASSED | 0.1% ATE change with random W addition |
 | Data Subset Bootstrap | ✓ PASSED | ATE = 0.0240 across 80% subsamples |
 | Unobserved Confounder | ✓ PASSED | Robust through moderate tier; breaks at strong |
@@ -300,7 +296,7 @@ The estimate is robust to mild and moderate unmeasured confounding. A confounder
 
 ---
 
-## 8. Step 4B — SHAP vs DML: Four Demonstrations
+## 8. Step 4B: SHAP vs DML - Four Demonstrations
 
 **Overall: DML wins 3/4 demonstrations**
 
@@ -310,7 +306,7 @@ All demos run on a 5,000-row subsample of the data (stratified random sample). R
 
 ---
 
-### Demo 1 — Placebo Test: Does SHAP Find Effects in Random Data? ✓ DML wins
+### Demo 1: Placebo Test - Does SHAP Find Effects in Random Data? ✓ DML wins
 
 **Question:** With fake random treatment, which method correctly finds no effect?
 
@@ -323,7 +319,7 @@ SHAP finds an "effect" of 0.0125 even when treatment is pure random noise. This 
 
 ---
 
-### Demo 2 — Confounding Bias: How Much Does Each Method Err Under Observational Data? ✓ DML wins
+### Demo 2: Confounding Bias - How Much Does Each Method Err Under Observational Data? ✓ DML wins
 
 **Question:** How does bias change when moving from a randomised setting (no confounding) to observational data (confounded)?
 
@@ -333,13 +329,13 @@ SHAP finds an "effect" of 0.0125 even when treatment is pure random noise. This 
 | Confounded observational | 0.0924 | 0.0118 |
 | **Ratio (confounded / random)** | **3.7×** | **0.35×** |
 
-Under random assignment, both methods have similar bias (~0.03). Under confounded observational data — the actual LendingClub situation — SHAP's bias increases 3.7-fold while DML's bias decreases to nearly zero. **SHAP bias is 7.8× larger than DML bias under confounding.**
+Under random assignment, both methods have similar bias (~0.03). Under confounded observational data (the actual LendingClub situation) SHAP's bias increases 3.7-fold while DML's bias decreases to nearly zero. **SHAP bias is 7.8x larger than DML bias under confounding.**
 
 This is the core result. It quantifies exactly the cost of using SHAP for causal questions in observational credit data.
 
 ---
 
-### Demo 3 — HTE Recovery: Does Each Method Rank Borrowers Correctly? — N/A on Real Data
+### Demo 3: HTE Recovery - Does Each Method Rank Borrowers Correctly? (N/A on Real Data)
 
 **Question:** Which method correctly identifies the most rate-sensitive borrowers?
 
@@ -354,7 +350,7 @@ On synthetic data with known causal structure (see Appendix), DML substantially 
 
 ---
 
-### Demo 4 — Stability: Which Method Is Consistently Accurate? ✓ DML wins
+### Demo 4: Stability - Which Method Is Consistently Accurate? ✓ DML wins
 
 **Question:** Across 15 random seeds, which method produces estimates closer to ground truth?
 
@@ -363,7 +359,7 @@ On synthetic data with known causal structure (see Appendix), DML substantially 
 | SHAP | 0.0242 | Consistently wrong by this margin |
 | DML | 0.0084 | Consistently close to truth |
 
-DML's mean error is 2.9× smaller than SHAP's across all 15 seeds. SHAP has very low variance (std=0.0003) — it consistently gives the same answer. But that answer is consistently wrong. DML has slightly higher variance (std=0.0018) but centres on a much more accurate value. The broken clock analogy: a clock stopped at 12:00 has std=0 but is only right twice a day.
+DML's mean error is 2.9x smaller than SHAP's across all 15 seeds. SHAP has very low variance (std=0.0003): it consistently gives the same answer. But that answer is consistently wrong. DML has slightly higher variance (std=0.0018) but centres on a much more accurate value. The broken clock analogy: a clock stopped at 12:00 has std=0 but is only right twice a day.
 
 ---
 
@@ -402,9 +398,9 @@ And SHAP is demonstrated to be systematically biased for this question, with 7.8
 
 ---
 
-## 10. Paper-Ready Numbers
+## 10. Key Results
 
-All primary results in one place for citation:
+All primary results in one place:
 
 ### Primary Result
 > A one standard deviation increase in interest rate (≈3–4 percentage points) causally increases loan default probability by **2.39 percentage points** on average (ATE = 0.0239), with substantial heterogeneity across borrowers (CATE range: −0.018 to +0.093).
