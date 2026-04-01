@@ -1,0 +1,32 @@
+# ── Data (too large for GitHub, ~1.6 GB) ─────────────────────
+data/
+
+# ── Virtual environment ────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Python cache ───────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# ── Large generated CSVs (plots are kept, raw CSVs are large) ──
+outputs/cate_results.csv
+
+# ── Jupyter ────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── IDE / OS ───────────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# ── Distribution / packaging ───────────────────────────────────
+dist/
+build/
+*.egg-info/

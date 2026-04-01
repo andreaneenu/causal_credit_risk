@@ -1,0 +1,5 @@
+Test,Passed,Key Metric,Interpretation
+Placebo Treatment (DoWhy),✓,New effect=-0.0002 | p=0.3025,"Permuted T ATE=-0.0002 vs original=0.0239. Confounder set: ['annual_inc', 'dti', 'fico_range_low', 'grade_num', 'purpose_num']. ✓ PASSED — effect collapses with permuted treatment."
+Random Common Cause (DoWhy),✓,New effect=0.0238 | change=0.1%,Added random variable to PC-discovered confounder set. ATE=0.0238 vs original=0.0239 (0.1% change). ✓ PASSED — estimate stable.
+Data Subset Bootstrap (DoWhy),✓,New effect=0.0240 | p=0.3651,80% subset ATE=0.0240 vs original=0.0239. ✓ PASSED — effect consistent across subsets.
+Unobserved Confounder — Tiered (DoWhy),✓,mild=0.0237 | moderate=0.0177 | strong=0.0019 | breaks at: strong,Tiered sensitivity: mild/moderate/strong unmeasured confounder. Moderate tier: ATE=0.0177 vs original=0.0239 (26.0% change). Effect sign breaks at: strong. ✓ PASSED — sign and magnitude robust under moderate confounding.

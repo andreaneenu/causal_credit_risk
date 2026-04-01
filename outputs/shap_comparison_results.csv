@@ -1,0 +1,5 @@
+Demo,What it measures,SHAP result,DML result,Winner
+1. Placebo Test,p-value: is placebo ATE = 0? (high p = correct),p=0.000 (rejects zero — spurious ✗),p=0.000 (cannot reject zero — correct ✓),DML
+2. Confounding Bias,|estimated - true| under confounding,bias=0.0924,bias=0.0118,DML
+3. HTE Recovery,Rank correlation with true sensitivity,rho=0.3430,rho=0.2763,N/A (no ground truth)
+4. Stability,Mean |ATE - true_ATE| across 15 seeds,error=0.0242 (stably wrong),error=0.0084  (stably right),DML

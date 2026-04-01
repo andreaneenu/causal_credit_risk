@@ -1,0 +1,5 @@
+Test,Passed,Key Metric,Interpretation
+Placebo Treatment,✓,Placebo ATE = -0.1481,Placebo ATE = -0.1481 vs Real ATE = 0.0277. ✓ PASSED — real effect is distinguishable from noise.
+Random Common Cause,✓,Change = 3.7%,Adding random confounder changed ATE by 3.7% on average. ✓ PASSED — estimate is stable to irrelevant controls.
+Data Subset Bootstrap,✓,"90% CI = [0.0273, 0.0430]","90% bootstrap CI: [0.0273, 0.0430]. ✓ PASSED — original ATE is within the bootstrap CI."
+Sensitivity Analysis,✓,RV = 0.0370 | E-val = 1.198,RV=0.0370: unmeasured confounder needs >3.7% partial R² with both T and Y to nullify this result. E-value=1.198. ✓ PASSED — result is robust to mild unmeasured confounders.
