@@ -20,7 +20,7 @@ The answer — called the **Heterogeneous Treatment Effect (HTE)** — has direc
 
 ---
 
-## For Complete Beginners: The Core Idea in 3 Minutes
+## The Core Idea 
 
 Imagine you have data showing that borrowers with higher interest rates default more often. Does that mean the rate *caused* the default?
 
