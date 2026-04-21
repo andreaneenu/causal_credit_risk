@@ -318,29 +318,11 @@ After running `main_3.py`, check the `outputs/` folder:
 
 ---
 
-## Project Structure for Your Resume
-
-Here's how to frame this project for a Quant/Data Science role at a Tier-1 Fintech:
-
-**One-line summary:**
-> "Built a causal inference pipeline on 100K+ LendingClub loans using PC Algorithm for DAG structure learning and Causal Forest DML to estimate heterogeneous treatment effects of interest rate changes on default probability, revealing 3x higher rate sensitivity in the bottom income quintile vs. the top."
-
-**Technical skills demonstrated:**
-- Causal discovery (constraint-based PC Algorithm, conditional independence testing)
-- Causal identification (Backdoor Criterion, d-separation)
-- Semiparametric estimation (Double ML / Robinson estimator, Neyman orthogonality)
-- Treatment heterogeneity (Causal Forests, CATE, policy curves)
-- Python production practices (modular design, type hints, logging)
-
-**Libraries to list on resume:** `causal-learn`, `EconML`, `DoWhy`, `scikit-learn`, `NetworkX`
-
----
-
 ## Validation Results (Step 4)
 
 Step 4 is fully implemented in `src/validation_2.py` and runs automatically as part of `main_3.py`.
 
-**Part A — DoWhy Refutation Tests (4/4 passed):**
+**Part A : DoWhy Refutation Tests (4/4 passed):**
 
 | Test | Result | Key Number |
 |---|---|---|
@@ -349,7 +331,7 @@ Step 4 is fully implemented in `src/validation_2.py` and runs automatically as p
 | Data Subset Bootstrap | ✓ PASSED | ATE = 0.0240 across 80% subsamples |
 | Tiered Sensitivity | ✓ PASSED | Robust through moderate unmeasured confounding |
 
-**Part B — SHAP vs DML Comparison (DML wins 3/4):**
+**Part B : SHAP vs DML Comparison (DML wins 3/4):**
 
 | Demo | SHAP | DML | Winner |
 |---|---|---|---|
