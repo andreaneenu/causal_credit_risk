@@ -127,7 +127,7 @@ causal_credit_risk/
 
 ---
 
-## Key Concepts Explained Simply
+## Key Concepts
 
 ### The Backdoor Criterion
 When we ask "what causes what," we need to block all *non-causal* paths between treatment and outcome. In a causal graph, if income affects both `int_rate` (via underwriting) and `default` (via repayment capacity), then income is a "backdoor path" from rate to default. We close it by including income as a control. The **Backdoor Criterion** is the formal mathematical rule for which variables to include as controls.
