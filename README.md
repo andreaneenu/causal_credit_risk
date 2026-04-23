@@ -5,15 +5,15 @@
 
 ## What is this project?
 
-Most credit risk models (XGBoost, LightGBM) are excellent at **predicting** who will default — but they can't answer: *"If we raise this borrower's interest rate by 1%, will they be more likely to default?"*
+Most credit risk models (XGBoost, LightGBM) are excellent at **predicting** who will default but they can't answer: *"If we raise this borrower's interest rate by 1%, will they be more likely to default?"*
 
 That question requires **causal inference**, not just prediction.
 
 This project builds a full causal inference pipeline on the LendingClub dataset to answer:
 
-> **"How does a change in interest rate causally affect default probability — and does this effect differ across borrower types?"**
+> **"How does a change in interest rate causally affect default probability  and does this effect differ across borrower types?"**
 
-The answer — called the **Heterogeneous Treatment Effect (HTE)** — has direct applications in:
+The answer  called the **Heterogeneous Treatment Effect (HTE)**  has direct applications in:
 - Loan pricing decisions
 - Fair lending analysis (do rate hikes hurt low-income borrowers disproportionately?)
 - Stress testing (what happens to default rates under a 200bps rate shock?)
@@ -24,10 +24,10 @@ The answer — called the **Heterogeneous Treatment Effect (HTE)** — has direc
 
 Imagine you have data showing that borrowers with higher interest rates default more often. Does that mean the rate *caused* the default?
 
-**Not necessarily.** Maybe riskier borrowers *both* got higher rates *and* were more likely to default anyway — because they had poor credit scores. This is called **confounding**.
+**Not necessarily.** Maybe riskier borrowers *both* got higher rates *and* were more likely to default anyway  because they had poor credit scores. This is called **confounding**.
 
 To find the *true causal effect* of the interest rate, we need to:
-1. **Map out the causal relationships** (the DAG — like a flowchart of what causes what)
+1. **Map out the causal relationships** (the DAG  like a flowchart of what causes what)
 2. **Control for the confounders** (variables that influence both the rate AND default)
 3. **Estimate the effect** in a way that's robust to our ML models being imperfect (this is DML)
 
@@ -103,7 +103,7 @@ causal_credit_risk/
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  STEP 4: validation_2.py                                    │
-│  Part A: DoWhy refutation tests (4 tests — can we trust it?)│
+│  Part A: DoWhy refutation tests (4 tests  can we trust it?)│
 │  Part B: SHAP vs DML comparison (why is SHAP wrong?)        │
 │  Outputs: validation_refutations.png, shap_vs_dml.png       │
 └─────────────────────────────────────────────────────────────┘
@@ -117,13 +117,13 @@ causal_credit_risk/
 
 | Variable | Causal Role | Why |
 |---|---|---|
-| `int_rate` | **Treatment (T)** | The intervention we're studying — does it cause default? |
+| `int_rate` | **Treatment (T)** | The intervention we're studying  does it cause default? |
 | `default` | **Outcome (Y)** | What we're trying to explain causally |
-| `annual_inc`, `dti`, `fico_range_low`, `emp_length`, `open_acc`, `revol_util` | **Confounders (W)** | These influence *both* the interest rate assigned AND the likelihood of default — if we don't control for them, we get a biased estimate |
-| `annual_inc`, `loan_amnt`, `grade_num`, `purpose`, `home_ownership` | **Effect Modifiers (X)** | These change *how much* the treatment affects the outcome — used to calculate CATE |
+| `annual_inc`, `dti`, `fico_range_low`, `emp_length`, `open_acc`, `revol_util` | **Confounders (W)** | These influence *both* the interest rate assigned AND the likelihood of default  if we don't control for them, we get a biased estimate |
+| `annual_inc`, `loan_amnt`, `grade_num`, `purpose`, `home_ownership` | **Effect Modifiers (X)** | These change *how much* the treatment affects the outcome  used to calculate CATE |
 | `total_pymnt`, `recoveries`, `funded_amnt` | **Excluded** ⚠️ | These happen *after* the loan is issued. Including them would open a statistical "backdoor" and break our estimates |
 
-> **Why are `total_pymnt` etc. excluded?** Because they're consequences of both the interest rate AND default. Controlling for a consequence of both cause and effect is a classic error called **collider bias** — it creates a spurious correlation that didn't exist in reality.
+> **Why are `total_pymnt` etc. excluded?** Because they're consequences of both the interest rate AND default. Controlling for a consequence of both cause and effect is a classic error called **collider bias**  it creates a spurious correlation that didn't exist in reality.
 
 ---
 
@@ -132,7 +132,7 @@ causal_credit_risk/
 ### The Backdoor Criterion
 When we ask "what causes what," we need to block all *non-causal* paths between treatment and outcome. In a causal graph, if income affects both `int_rate` (via underwriting) and `default` (via repayment capacity), then income is a "backdoor path" from rate to default. We close it by including income as a control. The **Backdoor Criterion** is the formal mathematical rule for which variables to include as controls.
 
-### Double Machine Learning (DML) — The "Why" Not Just "How"
+### Double Machine Learning (DML)  The "Why" Not Just "How"
 Standard regression: `default = α + β·int_rate + γ·income + ε`
 The problem: the ML model might learn that income is so predictive that it "explains away" the rate's effect, underestimating β.
 
@@ -140,7 +140,7 @@ DML fixes this by working in two stages:
 - **Stage 1 (Residualize):** Build a ML model of `int_rate ~ income, dti, fico...` and extract the *residual* (the "surprise" in the rate that can't be explained by confounders). Do the same for `default`.
 - **Stage 2 (Regress residuals):** Regress the default residual on the rate residual. Now β is the *pure causal effect*, free of confounding.
 
-The mathematical insight: after residualization, the residual of `int_rate` is uncorrelated with all confounders — it's *as if* rates were randomly assigned.
+The mathematical insight: after residualization, the residual of `int_rate` is uncorrelated with all confounders  it's *as if* rates were randomly assigned.
 
 ### CATE: Why One Number Isn't Enough
 The Average Treatment Effect (ATE) gives you one number: "a 1% rate increase raises default probability by X% on average." But CATE asks: *for whom?*
@@ -149,7 +149,7 @@ The Average Treatment Effect (ATE) gives you one number: "a 1% rate increase rai
 τ(x) = E[Y(1) - Y(0) | X = x]
 ```
 
-Where `Y(1)` = default probability at raised rate, `Y(0)` = default probability at current rate, and `x` = this specific borrower's characteristics. The Causal Forest learns this function non-parametrically — a different τ for every borrower.
+Where `Y(1)` = default probability at raised rate, `Y(0)` = default probability at current rate, and `x` = this specific borrower's characteristics. The Causal Forest learns this function non-parametrically  a different τ for every borrower.
 
 ---
 
@@ -203,10 +203,10 @@ python main_3.py --data data/loan.csv --nrows 100000 --algorithm ges --use-dowhy
 ```
 
 This is the **recommended production command**. It runs all four steps with:
-- `--data data/loan.csv` — full real dataset
-- `--nrows 100000` — 100k rows (the full usable sample)
-- `--algorithm ges` — GES causal discovery (more robust than PC for binary outcomes)
-- `--use-dowhy` — DoWhy API for Step 4 refutation tests
+- `--data data/loan.csv`  full real dataset
+- `--nrows 100000`  100k rows (the full usable sample)
+- `--algorithm ges`  GES causal discovery (more robust than PC for binary outcomes)
+- `--use-dowhy`  DoWhy API for Step 4 refutation tests
 
 Saves all plots and CSVs to `outputs/`.
 
@@ -224,7 +224,7 @@ Use `--nrows 20000` for fast local iteration. Drop `--use-dowhy` to skip the slo
 python main_3.py
 ```
 
-If `data/loan.csv` is not found, the pipeline automatically generates synthetic LendingClub-like data (5,000 rows). All four steps run identically — useful for testing your setup before downloading the dataset.
+If `data/loan.csv` is not found, the pipeline automatically generates synthetic LendingClub-like data (5,000 rows). All four steps run identically  useful for testing your setup before downloading the dataset.
 
 ### Option D: Compare all causal discovery methods
 
@@ -251,9 +251,9 @@ Options:
 ```
 
 **CI test guide:**
-- `fisherz` — fast, assumes Gaussian. Best for large n with continuous features.
-- `chisq` — better for discrete/binary variables. Recommended for LendingClub's binary `default`.
-- `kci` — non-parametric, no assumptions. Very slow (subsamples to 3,000 rows).
+- `fisherz`  fast, assumes Gaussian. Best for large n with continuous features.
+- `chisq`  better for discrete/binary variables. Recommended for LendingClub's binary `default`.
+- `kci`  non-parametric, no assumptions. Very slow (subsamples to 3,000 rows).
 
 > ⚠️ `--ci-test` and `--pc-alpha` are ignored when `--algorithm ges` is used.
 
@@ -300,8 +300,8 @@ After running `main_3.py`, check the `outputs/` folder:
 
 ### The CATE Distribution Plot
 
-- **Wide distribution** → Strong heterogeneity — the single ATE number is hiding a lot of variation across borrowers. HTE analysis is valuable here.
-- **Narrow distribution** → Weak heterogeneity — all borrowers respond similarly to rate changes. A single ATE may be sufficient.
+- **Wide distribution** → Strong heterogeneity  the single ATE number is hiding a lot of variation across borrowers. HTE analysis is valuable here.
+- **Narrow distribution** → Weak heterogeneity  all borrowers respond similarly to rate changes. A single ATE may be sufficient.
 
 ---
 
@@ -337,14 +337,14 @@ Step 4 is fully implemented in `src/validation_2.py` and runs automatically as p
 |---|---|---|---|
 | Placebo test | 0.0125 fake effect | 0.0034 ≈ 0 | DML |
 | Confounding bias | 0.0924 bias | 0.0118 bias | DML |
-| HTE recovery | N/A on real data | N/A on real data | — |
+| HTE recovery | N/A on real data | N/A on real data |  |
 | Stability | 0.0242 mean error | 0.0084 mean error | DML |
 
 ---
 
 ## References
 
-- Chernozhukov et al. (2018) — *Double/Debiased Machine Learning* (the DML paper)
-- Wager & Athey (2018) — *Estimation and Inference of Heterogeneous Treatment Effects using Random Forests* (Causal Forests)
-- Pearl (2009) — *Causality* (foundational causal DAG theory)
-- Spirtes, Glymour & Scheines (2000) — *Causation, Prediction and Search* (PC Algorithm)
+- Chernozhukov et al. (2018)  *Double/Debiased Machine Learning* (the DML paper)
+- Wager & Athey (2018)  *Estimation and Inference of Heterogeneous Treatment Effects using Random Forests* (Causal Forests)
+- Pearl (2009)  *Causality* (foundational causal DAG theory)
+- Spirtes, Glymour & Scheines (2000)  *Causation, Prediction and Search* (PC Algorithm)
